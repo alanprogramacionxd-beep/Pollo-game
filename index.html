@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>POLLO EVOLUTION</title>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3015879724803045" crossorigin="anonymous"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&display=swap');
+
+        :root {
+            --primary: #FF9F1C;
+            --secondary: #2EC4B6;
+            --dark: #011627;
+            --glass: rgba(255, 255, 255, 0.9);
+        }
+
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; font-family: 'Quicksand', sans-serif;
+            background: #f0f0f0; color: var(--dark);
+        }
+
+        #app { position: relative; width: 100%; height: 100%; }
+
+        /* --- MENÚS --- */
+        .screen {
+            position: absolute; inset: 0; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: var(--glass); z-index: 100; transition: 0.5s;
+        }
+
+        .card {
+            background: white; padding: 30px; border-radius: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            text-align: center; width: 80%; max-width: 400px;
+        }
+
+        .btn {
+            background: var(--primary); color: white; border: none;
+            padding: 15px 30px; border-radius: 20px; font-size: 1.2rem;
+            font-weight: bold; cursor: pointer; margin: 10px; width: 100%;
+            box-shadow: 0 5px 0 #e68a00;
+        }
+
+        .btn:active { transform: translateY(3px); box-shadow: 0 2px 0 #e68a00; }
+        .btn-shop { background: var(--secondary); box-shadow: 0 5px 0 #25a196; }
+
+        /* --- TIENDA --- */
+        #shop-screen { display: none; }
+        .skin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; }
+        .skin-item {
+            padding: 15px; border: 2px solid #eee; border-radius: 20px;
+            cursor: pointer;
+        }
+        .skin-item.active { border-color: var(--primary); background: #fff9f0; }
+
+        /* --- GAMEPLAY --- */
+        canvas { display: block; background: #E0FBFC; }
+        #hud {
+            position: absolute; top: 0; width: 100%; padding: 20px;
+            display: flex; justify-content: space-between; pointer-events: none;
+            font-weight: bold; font-size: 1.2rem; z-index: 10;
+        }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <div id="hud">
+        <div>🍗 <span id="score-val">0</span></div>
+        <div>💰 <span id="coins-val">0</span></div>
+    </div>
+
+    <div id="menu-screen" class="screen">
+        <div class="card">
+            <h1 style="color: var(--primary); font-size: 2.5rem; margin-bottom: 5px;">POLLO GO!</h1>
+            <p>¡Salta y colecciona skins!</p>
+            <button class="btn" onclick="startGame()">JUGAR</button>
+            <button class="btn btn-shop" onclick="toggleShop(true)">TIENDA</button>
+        </div>
+    </div>
+
+    <div id="shop-screen" class="screen">
+        <div class="card">
+            <h2>Tienda de Skins</h2>
+            <div class="skin-grid">
+                <div class="skin-item active" onclick="buySkin('classic', 0)">
+                    <div style="background:#FF9F1C; height:40px; border-radius:10px;"></div>
+                    <p>Clásico</p>
+                </div>
+                <div class="skin-item" onclick="buySkin('aqua', 100)">
+                    <div style="background:#2EC4B6; height:40px; border-radius:10px;"></div>
+                    <p>Aqua (100)</p>
+                </div>
+                <div class="skin-item" onclick="buySkin('pink', 250)">
+                    <div style="background:#FF006E; height:40px; border-radius:10px;"></div>
+                    <p>Elite (250)</p>
+                </div>
+                <div class="skin-item" onclick="buySkin('gold', 500)">
+                    <div style="background:#FFD700; height:40px; border-radius:10px;"></div>
+                    <p>Rey (500)</p>
+                </div>
+            </div>
+            <button class="btn" style="background:#555; box-shadow:0 5px 0 #333;" onclick="toggleShop(false)">VOLVER</button>
+        </div>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+</div>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    let coins = parseInt(localStorage.getItem('coins')) || 0;
+    let currentSkin = localStorage.getItem('skin') || '#FF9F1C';
+    let score = 0;
+    let gameActive = false;
+    let platforms = [];
+    let particles = [];
+
+    const player = {
+        x: canvas.width / 2,
+        y: canvas.height - 100,
+        w: 40, h: 40,
+        vy: 0, vx: 0,
+        jump: -15, gravity: 0.8
+    };
+
+    // Actualizar HUD inicial
+    document.getElementById('coins-val').innerText = coins;
+
+    function startGame() {
+        document.getElementById('menu-screen').style.display = 'none';
+        gameActive = true;
+        score = 0;
+        platforms = [];
+        // Crear plataforma inicial
+        for(let i=0; i<6; i++) {
+            platforms.push({
+                x: Math.random() * (canvas.width - 80),
+                y: canvas.height - (i * 150),
+                w: 80, h: 15
+            });
+        }
+        player.y = canvas.height - 100;
+        player.vy = 0;
+        loop();
+        
+        // Monetización: Cada 10 segundos ping a AdMob
+        setInterval(() => {
+            if(gameActive) console.log("AdMob Active: ca-pub-3015879724803045");
+        }, 10000);
+    }
+
+    function toggleShop(show) {
+        document.getElementById('shop-screen').style.display = show ? 'flex' : 'none';
+    }
+
+    function buySkin(type, cost) {
+        if(coins >= cost) {
+            if(cost > 0) coins -= cost;
+            const colors = {classic:'#FF9F1C', aqua:'#2EC4B6', pink:'#FF006E', gold:'#FFD700'};
+            currentSkin = colors[type];
+            localStorage.setItem('coins', coins);
+            localStorage.setItem('skin', currentSkin);
+            document.getElementById('coins-val').innerText = coins;
+            alert("¡Skin equipada!");
+        } else {
+            alert("Te faltan monedas. ¡Juega más!");
+        }
+    }
+
+    window.onmousemove = (e) => { player.x = e.clientX - player.w/2; };
+    window.ontouchmove = (e) => { player.x = e.touches[0].clientX - player.w/2; };
+
+    function loop() {
+        if(!gameActive) return;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Jugador
+        player.vy += player.gravity;
+        player.y += player.vy;
+
+        // Dibujar Jugador
+        ctx.fillStyle = currentSkin;
+        ctx.beginPath();
+        ctx.roundRect(player.x, player.y, player.w, player.h, 10);
+        ctx.fill();
+
+        // Plataformas
+        platforms.forEach((p, i) => {
+            ctx.fillStyle = "#333";
+            ctx.roundRect(p.x, p.y, p.w, p.h, 5);
+            ctx.fill();
+
+            // Colisión desde arriba
+            if(player.vy > 0 && 
+               player.x + player.w > p.x && player.x < p.x + p.w &&
+               player.y + player.h > p.y && player.y + player.h < p.y + p.h + 20) {
+                player.vy = player.jump;
+                score += 10;
+                document.getElementById('score-val').innerText = score;
+                // Ganar monedas poco a poco
+                if(score % 100 === 0) {
+                    coins++;
+                    document.getElementById('coins-val').innerText = coins;
+                    localStorage.setItem('coins', coins);
+                }
+            }
+
+            // Mover plataformas hacia abajo para efecto infinito
+            if(player.y < canvas.height / 2) {
+                p.y += 5;
+                if(p.y > canvas.height) {
+                    p.y = 0;
+                    p.x = Math.random() * (canvas.width - 80);
+                }
+            }
+        });
+
+        if(player.y > canvas.height) gameOver();
+
+        requestAnimationFrame(loop);
+    }
+
+    function gameOver() {
+        gameActive = false;
+        alert("¡Caíste! Puntos: " + score);
+        document.getElementById('menu-screen').style.display = 'flex';
+    }
+</script>
+</body>
+</html>
