@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RewardVault - Gana Cuentas</title>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3015879724803045" crossorigin="anonymous"></script>
+    <style>
+        :root {
+            --fondo: #0f0f0f;
+            --tarjeta: #1a1a1a;
+            --azul: #0084ff;
+            --oro: #ffcc00;
+            --curva: 30px;
+        }
+
+        body {
+            background-color: var(--fondo);
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .header {
+            background: var(--tarjeta);
+            width: 90%;
+            max-width: 400px;
+            padding: 20px;
+            border-radius: var(--curva);
+            text-align: center;
+            border: 1px solid #333;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+        }
+
+        #saldo {
+            font-size: 2.5rem;
+            color: var(--oro);
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .btn-anuncio {
+            background: linear-gradient(135deg, #0051ff, #00a2ff);
+            color: white;
+            border: none;
+            width: 90%;
+            max-width: 400px;
+            padding: 22px;
+            border-radius: var(--curva);
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 0 5px 15px rgba(0, 132, 255, 0.3);
+        }
+
+        .btn-anuncio:active { transform: scale(0.95); }
+
+        /* BarraFondo */
+        .barra-container {
+            width: 90%;
+            max-width: 400px;
+            height: 15px;
+            background: #252525;
+            border-radius: 50px;
+            margin: 20px 0;
+            overflow: hidden;
+            display: none;
+        }
+
+        .barra-progreso {
+            width: 0%;
+            height: 100%;
+            background: var(--oro);
+            box-shadow: 0 0 10px var(--oro);
+        }
+
+        .canje-box {
+            background: var(--tarjeta);
+            width: 90%;
+            max-width: 400px;
+            padding: 20px;
+            border-radius: var(--curva);
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .btn-canje {
+            background: white;
+            color: black;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 50px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        #cuenta-obtenida {
+            background: #000;
+            padding: 15px;
+            border-radius: 20px;
+            margin-top: 15px;
+            display: none;
+            border: 1px dashed var(--azul);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <p style="margin:0; color:#aaa;">Mis Monedas</p>
+        <div id="saldo">0</div>
+    </div>
+
+    <button class="btn-anuncio" onclick="activarAnuncio()">
+        VER ANUNCIO (+10,000)
+    </button>
+
+    <div class="barra-container" id="contBarra">
+        <div class="barra-progreso" id="progreso"></div>
+    </div>
+
+    <div class="canje-box">
+        <h3>Cuenta Random</h3>
+        <p style="font-size:0.9rem; color:#888;">Costo: 50,000 monedas</p>
+        <button class="btn-canje" onclick="canjear()">Canjear Cuenta</button>
+        <div id="cuenta-obtenida"></div>
+    </div>
+
+    <script>
+        let monedas = 0;
+
+        function activarAnuncio() {
+            const btn = document.querySelector('.btn-anuncio');
+            const cont = document.getElementById('contBarra');
+            const barra = document.getElementById('progreso');
+            
+            btn.disabled = true;
+            cont.style.display = 'block';
+            let width = 0;
+
+            let interval = setInterval(() => {
+                width += 1;
+                barra.style.width = width + '%';
+                if (width >= 100) {
+                    clearInterval(interval);
+                    monedas += 10000;
+                    document.getElementById('saldo').innerText = monedas.toLocaleString();
+                    btn.disabled = false;
+                    cont.style.display = 'none';
+                    barra.style.width = '0%';
+                    alert("¡Ganaste 10,000 monedas!");
+                }
+            }, 50); // Simula 5 segundos de carga
+        }
+
+        function canjear() {
+            const display = document.getElementById('cuenta-obtenida');
+            if (monedas >= 50000) {
+                monedas -= 50000;
+                document.getElementById('saldo').innerText = monedas.toLocaleString();
+                
+                const u = "User_" + Math.floor(Math.random()*999);
+                const p = Math.random().toString(36).substring(7);
+                
+                display.style.display = 'block';
+                display.innerHTML = `<strong>Cuenta:</strong> ${u}<br><strong>Pass:</strong> ${p}`;
+            } else {
+                alert("Te faltan monedas.");
+            }
+        }
+    </script>
+</body>
+</html>
