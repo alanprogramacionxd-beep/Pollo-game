@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NEXUS CHICKEN EVO - AL_AN432</title>
+
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3015879724803045" crossorigin="anonymous"></script>
+
+    <style>
+        /* CSS: TUS CURVAS Y ESTILOS */
+        body { background: #111; color: white; font-family: sans-serif; text-align: center; margin: 0; overflow: hidden; }
+        #game-container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+        #chicken-btn { font-size: 80px; cursor: pointer; transition: transform 0.1s; user-select: none; }
+        #chicken-btn:active { transform: scale(0.9); }
+        .stats { font-size: 24px; font-weight: bold; margin: 20px; color: #2ed573; }
+        
+        /* ESTILO DEL ANUNCIO */
+        #ad-overlay { 
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.95); 
+            z-index: 100000; flex-direction: column; align-items: center; justify-content: center; 
+        }
+        .ad-box { width: 85%; max-width: 400px; background: #222; border-radius: 30px; padding: 20px; border: 3px solid #444; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <div class="stats">🍗 POLLOS: <span id="score-text">0</span></div>
+        <div id="chicken-btn">🍗</div>
+        <p>Nivel (Power): <span id="power-text">1</span></p>
+    </div>
+
+    <div id="music-widget" style="position:fixed; bottom:20px; left:20px; z-index:10000; background:rgba(0,0,0,0.6); padding:10px; border-radius:20px; display:flex; align-items:center; gap:10px; backdrop-filter:blur(5px); border:1px solid white;">
+        <button id="m-btn" style="background:white; border:none; border-radius:50%; width:30px; height:30px; cursor:pointer;">▶</button>
+        <input type="range" id="m-vol" min="0" max="1" step="0.1" value="0.5" style="width:60px; accent-color:#2ed573;">
+        <span style="font-size:12px; color:white;">NEXUS BEATS</span>
+    </div>
+    <audio id="audio-track" loop src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3"></audio>
+
+    <div id="ad-overlay">
+        <div class="ad-box">
+            <p style="color:#777; font-size:12px;">ANUNCIO RECOMPENSADO</p>
+            <div style="width:100%; height:150px; background:#000; border-radius:15px; display:flex; align-items:center; justify-content:center; font-size:40px;">📺</div>
+            <h2 id="ad-timer-text" style="color:white;">Cargando...</h2>
+            <p id="ad-reward-text" style="color:#ffa502; font-weight:bold;"></p>
+        </div>
+    </div>
+
+    <script>
+        // VARIABLES GLOBALES (Para que el JS las encuentre siempre)
+        window.clicks = 0;
+        window.power = 1;
+
+        const scoreTxt = document.getElementById('score-text');
+        const powerTxt = document.getElementById('power-text');
+        const chicken = document.getElementById('chicken-btn');
+
+        // CLICK DEL POLLO
+        chicken.onclick = () => {
+            window.clicks += window.power;
+            updateUI();
+        };
+
+        function updateUI() {
+            scoreTxt.innerText = window.clicks.toLocaleString();
+            powerTxt.innerText = window.power;
+        }
+
+        // --- LÓGICA DE MÚSICA ---
+        const track = document.getElementById('audio-track');
+        const mBtn = document.getElementById('m-btn');
+        mBtn.onclick = () => {
+            if(track.paused) { track.play(); mBtn.innerText = "⏸"; }
+            else { track.pause(); mBtn.innerText = "▶"; }
+        };
+
+        // --- SISTEMA DE PAGOS (JV) CORREGIDO ---
+        const CONFIG_NEXUS = { segundosEspera: 20000, recompensaBase: 1000 };
+
+        function iniciarPublicidad() {
+            setInterval(() => {
+                lanzarAnuncioRecompensa();
+            }, CONFIG_NEXUS.segundosEspera);
+        }
+
+        function lanzarAnuncioRecompensa() {
+            const overlay = document.getElementById('ad-overlay');
+            if(track) track.pause(); // Pausar música para el anuncio
+            overlay.style.display = "flex";
+
+            let premioFinal = CONFIG_NEXUS.recompensaBase * window.power;
+            document.getElementById('ad-reward-text').innerText = "Premio: " + premioFinal.toLocaleString() + " 🍗";
+
+            let cuenta = 5;
+            let timer = setInterval(() => {
+                cuenta--;
+                document.getElementById('ad-timer-text').innerText = "Recompensa en " + cuenta + "...";
+                if(cuenta <= 0) {
+                    clearInterval(timer);
+                    window.clicks += premioFinal; // SUMA REAL
+                    overlay.style.display = "none";
+                    if(track) track.play(); // Reanudar música
+                    updateUI();
+                    alert("¡Recibiste " + premioFinal + " pollos por apoyar el juego!");
+                }
+            }, 1000);
+        }
+
+        setTimeout(iniciarPublicidad, 5000);
+    </script>
+</body>
+</html>
