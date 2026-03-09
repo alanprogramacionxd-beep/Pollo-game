@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus Chicken Evolution: Ultra Edition</title>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3015879724803045" crossorigin="anonymous"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap');
+
+        :root {
+            --primary: #FFD700;
+            --secondary: #FF4500;
+            --gem-color: #00F2FF;
+            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --ui-shadow: 0 8px 0 #b39700;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Fredoka One', cursive;
+            background: var(--bg-gradient);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* --- UI DE ESTADÍSTICAS --- */
+        .header {
+            width: 90%;
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            z-index: 10;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            padding: 10px 20px;
+            border-radius: 20px;
+            border: 3px solid white;
+            color: white;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* --- EL POLLO PRINCIPAL --- */
+        .game-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .main-chicken {
+            width: 220px;
+            cursor: pointer;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3));
+            transition: transform 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            animation: idle 2s infinite ease-in-out;
+        }
+
+        @keyframes idle {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05) rotate(2deg); }
+        }
+
+        .main-chicken:active {
+            transform: scale(0.8) rotate(-5deg);
+        }
+
+        /* --- BOTONES UI --- */
+        .footer-menu {
+            margin-bottom: 30px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn-game {
+            background: var(--primary);
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-family: 'Fredoka One';
+            font-size: 1rem;
+            color: #5c4e00;
+            box-shadow: var(--ui-shadow);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-game:active {
+            transform: translateY(4px);
+            box-shadow: 0 4px 0 #b39700;
+        }
+
+        /* --- ANIMACIONES DE EMOJIS --- */
+        .floating-text {
+            position: absolute;
+            color: white;
+            font-size: 2rem;
+            font-weight: bold;
+            pointer-events: none;
+            animation: floatUp 0.8s ease-out forwards;
+            text-shadow: 2px 2px 0px #000;
+        }
+
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-150px) scale(1.5); }
+        }
+
+        /* --- MENÚ DE INICIO --- */
+        #overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .title-glow {
+            color: var(--primary);
+            font-size: 3rem;
+            text-shadow: 0 0 20px var(--primary);
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="overlay">
+        <h1 class="title-glow">POLLO<br>NEXUS</h1>
+        <p style="color: white;">¡Haz click para ganar!</p>
+        <button class="btn-game" style="font-size: 2rem;" onclick="iniciar()">¡JUGAR YA!</button>
+    </div>
+
+    <div class="header">
+        <div class="stat-card">🍗 <span id="count">0</span></div>
+        <div class="stat-card" style="border-color: var(--gem-color);">💎 <span id="gems">0</span></div>
+    </div>
+
+    <div class="game-container">
+        <img src="https://cdn-icons-png.flaticon.com/512/2662/2662503.png" 
+             id="chicken" 
+             class="main-chicken" 
+             onclick="handleTap(event)" 
+             alt="Pollo">
+    </div>
+
+    <div class="footer-menu">
+        <button class="btn-game" onclick="alert('Nivel: ' + lvl)">NIVEL: <span id="lvlDisplay">1</span></button>
+        <button class="btn-game" style="background: #e74c3c; color: white; box-shadow: 0 8px 0 #922b21;" onclick="toggleMusic()">🎵 MÚSICA</button>
+    </div>
+
+    <audio id="bgMusic" loop src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3"></audio>
+    <audio id="popSound" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3"></audio>
+
+    <script>
+        let pollos = 0;
+        let gemas = 0;
+        let lvl = 1;
+        let multi = 1;
+        let musicPlaying = false;
+
+        function iniciar() {
+            document.getElementById('overlay').style.display = 'none';
+            toggleMusic();
+            startAdLoop();
+        }
+
+        function handleTap(e) {
+            pollos += multi;
+            document.getElementById('count').innerText = pollos;
+            
+            // Sonido de click
+            let snd = document.getElementById('popSound').cloneNode();
+            snd.volume = 0.5;
+            snd.play();
+
+            // Animación de texto flotante
+            createFloatingText(e.clientX, e.clientY, "+" + multi + "🍗");
+
+            // Lógica de subir nivel y gemas
+            if(pollos >= lvl * 50) {
+                gemas += 10;
+                lvl++;
+                multi += 1;
+                document.getElementById('gems').innerText = gemas;
+                document.getElementById('lvlDisplay').innerText = lvl;
+                createFloatingText(window.innerWidth/2, window.innerHeight/2, "¡NIVEL UP! ⭐", true);
+            }
+        }
+
+        function createFloatingText(x, y, text, isBig = false) {
+            const el = document.createElement('div');
+            el.className = 'floating-text';
+            el.innerText = text;
+            el.style.left = x + 'px';
+            el.style.top = y + 'px';
+            if(isBig) el.style.fontSize = '3.5rem';
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 800);
+        }
+
+        function toggleMusic() {
+            const m = document.getElementById('bgMusic');
+            if(!musicPlaying) {
+                m.play();
+                musicPlaying = true;
+            } else {
+                m.pause();
+                musicPlaying = false;
+            }
+        }
+
+        // --- LÓGICA DE ANUNCIOS CADA 39 SEGUNDOS ---
+        function startAdLoop() {
+            setInterval(() => {
+                console.log("Activando anuncio para: pub-3015879724803045");
+                // Aquí AdMob detecta que el usuario está activo en el sitio
+                // Mostramos un aviso visual para que el usuario sepa que cuenta
+                createFloatingText(window.innerWidth/2, 100, "💰 BONUS AD ACTIVADO", true);
+            }, 39000);
+        }
+    </script>
+</body>
+</html>
